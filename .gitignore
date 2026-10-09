@@ -1,0 +1,17 @@
+# Environment variables and secrets
+.env
+
+# Python virtual environment
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Additional protection for GitHub
+.env.*
+!.env.example
+venv/
+*.log
+# Do not upload raw datasets
+Data/
