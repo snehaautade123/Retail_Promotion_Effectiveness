@@ -102,16 +102,84 @@ Explores department and product performance, observed sales trends, discount lev
 - **Average Weekly Sales:** use the exact DAX definition in the report model; document the denominator and filter context before publishing a final result.
 - **Average Discount %:** derived from the discount fields and sales; interpret this measure only after confirming the source sign convention and the exact formula in the Power BI model.
 
-## Validation status and release gate
+## Validation Status and Business Findings
 
-The following like-for-like KPI reconciliation has been performed:
+### KPI validation
 
-| Metric | SQL with `promotion_type <> 'Unknown'` | Power BI card | Status |
+The following Power BI KPI measures have been reconciled against PostgreSQL using the same `promotion_type <> 'Unknown'` filter.
+
+| Metric | SQL result | Power BI display | Status |
 |---|---:|---:|---|
-| Observed Sales | 1,557,750.83 | 1.56M | Matches after display rounding |
-| Observed Units | 794,593 | 795K | Matches after display rounding |
+| Observed Sales | 1,557,750.83 | 1.56M | Matches after rounding |
+| Observed Units | 794,593 | 795K | Matches after rounding |
 
-**Open data-quality issue:** across all rows, `promotion_analysis` currently totals `8,057,463.08` in sales and `260,685,622` units. Excluding `Unknown` leaves `1,557,750.83` in sales and `794,593` units. The difference in coverage—especially the unit gap—is large and must be explained before treating the promotion comparison as final. This may reflect unmatched promotion keys or a data/modeling issue; do not claim a promotion is the winner until it is investigated.
+### Business Question 1 — Observed sales by promotion type
+
+The analysis uses product-store-week observations. The counts below are observations, not distinct weeks.
+
+| Promotion type | Observations | Average sales per observation | Average units per observation |
+|---|---:|---:|---:|
+| Mailer Only | 246,268 | 3.38 | 1.67 |
+| Display + Mailer | 103,920 | 3.07 | 1.75 |
+| Display Only | 133,132 | 3.04 | 1.50 |
+
+Mailer Only has the highest average sales per observation in this overall classified-data comparison. This is an observed association, not proof of causal promotion lift.
+
+### Business Question 2 — Comparable-product comparison
+
+Products must have at least two distinct weeks under each of the three promotion types. Each product receives equal weight in the final average.
+
+| Promotion type | Comparable products | Average product-level sales |
+|---|---:|---:|
+| Display Only | 2,915 | 3.080 |
+| Mailer Only | 2,915 | 2.923 |
+| Display + Mailer | 2,915 | 2.914 |
+
+Display Only has the highest average product-level sales in this comparable-product analysis. This result does not establish that Display Only caused higher sales.
+
+### Business Question 3 — Department-level product winners
+
+For each comparable product, the promotion type with the highest observed average sales is counted as the winner. Ties are reported separately. Only departments with at least 30 comparable products are included.
+
+| Department | Comparable products | Display Only highest (%) | Mailer Only highest (%) | Display + Mailer highest (%) | Ties (%) |
+|---|---:|---:|---:|---:|---:|
+| GROCERY | 2,172 | 44.43 | 27.26 | 27.72 | 0.60 |
+| MEAT-PCKGD | 293 | 48.12 | 25.60 | 25.94 | 0.34 |
+| DRUG GM | 282 | 38.30 | 30.50 | 26.24 | 4.96 |
+| SEAFOOD-PCKGD | 61 | 52.46 | 21.31 | 26.23 | 0.00 |
+| NUTRITION | 33 | 51.52 | 42.42 | 6.06 | 0.00 |
+
+Percentages can differ slightly from 100% because of rounding.
+
+### Business Question 5 — Store-level comparison
+
+Among 113 comparable stores with at least two distinct weeks for each promotion type, the promotion with the highest observed average sales was:
+
+| Promotion type | Stores where it ranked highest |
+|---|---:|
+| Display Only | 22 |
+| Mailer Only | 82 |
+| Display + Mailer | 9 |
+| Highest-sales ties | 0 |
+| Total comparable stores | 113 |
+
+Mailer Only ranked highest in the largest number of comparable stores. This is a descriptive result and does not establish causal effectiveness.
+
+### Data coverage limitation
+
+The analysis contains 2,370,784 product-store-week observations in total.
+
+| Category | Observations | Sales | Units |
+|---|---:|---:|---:|
+| Unknown promotion type | 1,887,464 | 6,499,712.25 | 259,891,029 |
+| Classified promotion types | 483,320 | 1,557,750.83 | 794,593 |
+| Total | 2,370,784 | 8,057,463.08 | 260,685,622 |
+
+Unknown records account for approximately 79.6% of observations, 80.7% of sales, and 99.7% of units. A record is classified as Unknown when its product-store-week key does not match the promotion-support data.
+
+The unmatched records include both products absent from the promotion-support table and products whose store-week key does not match. Some products, including gasoline-related items, also contain unusually large quantity values. These values have not been assumed to be errors or converted to another unit without confirmation of the source-data encoding.
+
+Therefore, the promotion findings describe the classified observations and the documented comparable-product subset. They should not be interpreted as results for all retail sales or as causal promotion lift.
 
 ## Interpretation and limitations
 
