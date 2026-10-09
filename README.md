@@ -87,9 +87,13 @@ The analysis view classifies records as `Display Only`, `Mailer Only`, `Display 
 
 Provides high-level KPIs, observed sales by promotion type, weekly trend, department performance, and promotion exposure. Slicers allow users to explore department, store, promotion type, and week.
 
+![Promotion Overview](Documentation/promotion-overview.png)
+
 ### Page 2 — Promotion Deep Dive
 
 Explores department and product performance, observed sales trends, discount levels, and a comparable-product promotion matrix. Results should be interpreted using the filters and comparison rules displayed in the report.
+
+![Promotion Deep Dive](Documentation/promotion-deep-dive.png)
 
 ## KPI definitions
 
