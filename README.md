@@ -95,12 +95,36 @@ Explores department and product performance, observed sales trends, discount lev
 
 ![Promotion Deep Dive](Documentation/promotion-deep-dive.png)
 
-## KPI definitions
+## KPI Definitions
 
-- **Observed Sales:** sum of `sales` for rows where `promotion_type` is not `Unknown`.
-- **Observed Units:** sum of `units` for rows where `promotion_type` is not `Unknown`.
-- **Average Weekly Sales:** use the exact DAX definition in the report model; document the denominator and filter context before publishing a final result.
-- **Average Discount %:** derived from the discount fields and sales; interpret this measure only after confirming the source sign convention and the exact formula in the Power BI model.
+### Observed Sales
+
+Sum of `sales` for observations where `promotion_type <> 'Unknown'`. This KPI represents classified promotion observations, not total sales across the full dataset.
+
+### Observed Units
+
+Sum of `units` for observations where `promotion_type <> 'Unknown'`. Units should be interpreted with care because the source includes unusually large quantities for some products, including gasoline-related items.
+
+### Average Weekly Sales
+
+Calculated as the average of `Observed Sales` across distinct `week_no` values in the current report filter context. The result depends on the selected department, store, promotion type, and other active filters.
+
+### Average Discount %
+
+Calculated as:
+
+`(−SUM(retail_discount) − SUM(coupon_discount)) / (SUM(sales) − SUM(retail_discount) − SUM(coupon_discount))`
+
+The formula uses the discount fields as negative amounts. It calculates total discount magnitude as a proportion of implied pre-discount sales within the current filter context. It is a ratio of aggregated amounts, not an average of individual transaction-level discount percentages.
+
+### Average Sales of the Top Promotion
+
+For the promotion selected by `Best Performing Promotion`, this measure returns `Comparable Product Avg Sales`. If the top promotion is tied, it returns blank.
+
+### Interpretation
+
+These measures describe observed sales and discount patterns. They do not establish that a promotion caused a sales increase. Comparisons should be interpreted using the documented classification and comparable-product eligibility rules.
+
 
 ## Validation Status and Business Findings
 
@@ -201,28 +225,27 @@ Therefore, the promotion findings describe the classified observations and the d
 
 Exact local configuration depends on the paths and environment variables defined in the project files. Never place passwords, connection strings containing secrets, or raw data files in GitHub.
 
-## Recommended repository contents
+## Repository Structure
 
 ```text
 Retail_Promotion_Effectiveness/
-├── Python_ETL/
-│   └── etl_pipeline.py
-├── SQL/
-│   ├── 01_build_promotion_support.sql
-│   ├── 02_build_weekly_sales.sql
-│   ├── 03_create_promotion_analysis.sql
-│   └── 04_validation_checks.sql
+├── Documentation/
+│   ├── promotion-overview.png
+│   └── promotion-deep-dive.png
 ├── PowerBI/
-│   └── Retail_Promotion_Performance.pbix
-├── docs/
-│   ├── data_dictionary.md
-│   └── screenshots/
-├── .env.example
+│   └── Retail_Promotion_Effectiveness.pbix
+├── Python_ETL/
+│   ├── etl_pipeline.py
+│   └── promotion_analysis.ipynb
+├── SQL/
+│   ├── 01_create_tables.sql
+│   ├── 02_load_data.sql
+│   ├── 03_transform_data.sql
+│   └── 04_business_analysis.sql
 ├── .gitignore
-└── README.md
-```
-
-This is the recommended public repository layout; keep only files that actually exist and are safe to share. If the SQL scripts are currently stored elsewhere or still only in pgAdmin history, save and test them before publishing.
+├── README.md
+├── FINAL_RELEASE_CHECKLIST.md
+└── PORTFOLIO_SUMMARY.md
 
 ## Final business takeaway
 
